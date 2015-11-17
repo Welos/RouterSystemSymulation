@@ -1,0 +1,30 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Router
+{
+    public enum KindOfEvent { Coming, GoingOutOfRouter }; // pojawienie się w strumieniu i wyjście z wiązki
+    public class Event
+    {
+        public double key;
+        private KindOfEvent kind;
+        private int StreamNumber; // numer strumienia z którego pochodzi to Event
+
+        public Event(KindOfEvent kind, int m_StreamNumber, double time)
+        {
+            this.key = time;
+            StreamNumber = m_StreamNumber;
+            this.kind = kind;
+        }
+
+
+        public static Event Coming(int n, double t) { return new Event(KindOfEvent.Coming, n, t); }
+        public static Event GoingOutOfRouter(int n, double t) { return new Event(KindOfEvent.GoingOutOfRouter, n, t); }
+        public KindOfEvent GetKind() { return kind; }
+        public int getStreamNumber() { return StreamNumber; }
+        public double getKey() { return key; }
+    }
+}
