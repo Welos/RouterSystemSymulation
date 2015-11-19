@@ -21,10 +21,11 @@ namespace Router
 
         public FIFOQueue(string m_name, int m_size)
         {
-            name=m_name;
+            numberOfPackages = 0;
+            name = m_name;
             occupancy = 0;
             size = m_size;
-            queue = new Package[size];
+            queue = new Package[size*1000];
 
         }
 
@@ -35,14 +36,14 @@ namespace Router
             occupancy += pack.GetSize();
         }
 
-   /*     public Package DeletePackage(int i)
-        {
-            Package tmp = queue[i];
-            ChangeIndex(i);
-            numberOfPackages--;
-            occupancy -= tmp.GetSize();
-            return tmp;
-        }*/
+        /*     public Package DeletePackage(int i)
+             {
+                 Package tmp = queue[i];
+                 ChangeIndex(i);
+                 numberOfPackages--;
+                 occupancy -= tmp.GetSize();
+                 return tmp;
+             }*/
 
         public Package MoveToStream()
         {
