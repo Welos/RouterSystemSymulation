@@ -10,6 +10,7 @@ namespace Router
 {
     class Simulation
     {
+        double[] rejected;
         double[] NumberOfReceivedPackages;//
         double[] NumberOfServedPackages;//
         double[] ProbabilityOfFailure;//
@@ -53,10 +54,12 @@ namespace Router
             TotalServingTime = new double[NumberOfStreams + 1];
             AverageOccupancyOfqueue = new double[NumberOfStreams];
             TotalOccupancyOfQueue = new double[NumberOfStreams];
+            rejected = new double[NumberOfStreams +1];
             TotalOccupancyOfRouter = 0;
             AverageOccupancyOfRouter = 0;
             for (int i=0;i<=NumberOfStreams;i++)
             {
+                rejected[i] = 0;
                 TotalServingTime[i] = 0;
                 AverageServingTime[i] = 0;
                 NumberOfReceivedPackages[i] = 0;
@@ -75,7 +78,7 @@ namespace Router
         public void fSimulation()
         {
             double previoustime=0;
-            double temporarytime=0;
+            double CurrentTime = 0;
             Random rnd= new Random(DateTime.Now.Millisecond);
             while (TimeOfSimulation==0)
             {
@@ -88,54 +91,44 @@ namespace Router
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("Podaj inna liczbe dumassie");
+                    Console.WriteLine("Prosze podaj inna liczbe ");
                 }
                 for (int i=0;i<NumberOfStreams;i++)
                 {
-                    int a=0;
-                    string CurrentLambda=stream[i].GetNameOfWaitingDistribution();
-                    for (int j=0;j<NumberOfStreams;j++)
-                    {
-                        if(CurrentLambda==distribution[j].GetName())
-                            a=j;
-
-                    }
-                    temporarytime = distribution[a].SetTime(rnd.NextDouble());
-                    eventQueue.Insert(Event.Coming(i, temporarytime)); //Obczaić o co chodzi z kluczem
+                    double wait=Extractvalue(stream[i].GetNameOfWaitingDistribution(),NumberOfStreams);
+                    eventQueue.Insert(Event.Coming(i, wait)); 
                 }
 
             }
             while (CurrentTime<TimeOfSimulation)
             {
+                Event TempEvent=eventQueue.Delete();
+                previoustime = CurrentTime;
+                CurrentTime=TempEvent.getKey();
                 if (AuxilaryTime == 0)
                     AuxilaryTime = CurrentTime;
                 else AuxilaryTime = CurrentTime - previoustime;
                 for (int i=0;i<NumberOfStreams;i++)
                 {
-                    TotalOccupancyOfQueue[i] += queue[i].GetOccupancy() * AuxilaryTime;
+                    TotalOccupancyOfQueue[i] +=( queue[i].GetOccupancy()/queue[i].GetSize()) * AuxilaryTime;
                 }
                 if (occupancyOfRouter == true)
                     TotalOccupancyOfRouter += AuxilaryTime;
-                Event TempEvent=eventQueue.Delete();
-
 
                 
                   switch(TempEvent.GetKind())
                   {
                       case KindOfEvent.Coming:
                           {
-                              Package TemporaryPackage = new Package();
-                              previoustime = CurrentTime;
-                              CurrentTime = TempEvent.getKey();
+                              double length=Extractvalue(stream[TempEvent.getStreamNumber()].GetNameOflengthDistribution(),NumberOfStreams);
+                              Package TemporaryPackage = new Package(length,TempEvent.getKey());
                               NumberOfReceivedPackages[TempEvent.getStreamNumber()]++;
                               NumberOfReceivedPackages[NumberOfStreams ]++;
-                         // CurrentTime+=distribution[stream[TempEvent.getStreamNumber()].GetNumberOflengthDistribution()].SetTime(rnd.NextDouble());
-                          //ustalenie nr bufora i strumienia:
+
                               if (occupancyOfRouter==false)
                               {
                                   occupancyOfRouter = true;
-                                  a
-                                  double processing = (distribution[stream[TempEvent.getStreamNumber()].GetNumberOflengthDistribution()].SetTime(rnd.NextDouble()))/flowability;
+                                  double processing = length/flowability;
                                   eventQueue.Insert(Event.GoingOutOfRouter(TempEvent.getStreamNumber(), CurrentTime+processing));
                                   ProcessedPackage = TemporaryPackage;
                      
@@ -144,42 +137,44 @@ namespace Router
                               {
                                   queue[stream[TempEvent.getStreamNumber()].bufor].SetPackage(TemporaryPackage);
                               }
-                              
-                              a
-                              double interval = distribution[stream[TempEvent.getStreamNumber()].GetNumberOfWaitingDistribution()].SetTime(rnd.NextDouble());
+                              else
+                              {
+                                  rejected[TempEvent.getStreamNumber()] += 1;
+                              }
+                              double interval = Extractvalue(stream[TempEvent.getStreamNumber()].GetNameOfWaitingDistribution(),NumberOfStreams);
                               eventQueue.Insert(Event.Coming(TempEvent.getStreamNumber(), CurrentTime + interval));
                                     
                           break;
                           }
                       case KindOfEvent.GoingOutOfRouter:
                           {
-                              TotalServingTime[TempEvent.getStreamNumber()] += (TempEvent.getKey() - ProcessedPackage.GetComingTime());
-                              TotalServingTime[NumberOfStreams] += (TempEvent.getKey() - ProcessedPackage.GetComingTime());
+                              double ServingTime = CurrentTime - ProcessedPackage.GetComingTime();
+                              TotalServingTime[TempEvent.getStreamNumber()] += ServingTime;
+                              TotalServingTime[NumberOfStreams] += ServingTime;
                               NumberOfServedPackages[TempEvent.getStreamNumber()]++;
-                              NumberOfServedPackages[NumberOfStreams ]++;
+                              NumberOfServedPackages[NumberOfStreams] = NumberOfServedPackages[NumberOfStreams] + 1;
                               occupancyOfRouter = false;
-                              previoustime = CurrentTime;
-                              CurrentTime = TempEvent.getKey();
                                   for (int i = 0; i < NumberOfQueues; i++)
                                   {
                                       if (queue[i].occupancy != 0)
                                       {
                                           occupancyOfRouter = true;
                                           ProcessedPackage = queue[i].MoveToStream();
-                                          a
-                                          double processing = (distribution[stream[TempEvent.getStreamNumber()].GetNumberOflengthDistribution()].SetTime(rnd.NextDouble())) / flowability;
-                                          eventQueue.Insert(Event.GoingOutOfRouter(TempEvent.getStreamNumber(), CurrentTime + processing));
-
+                                          double length = Extractvalue(stream[i].GetNameOflengthDistribution(), NumberOfStreams);
+                                          double processing = length/ flowability;
+                                          eventQueue.Insert(Event.GoingOutOfRouter(i, CurrentTime + processing));
                                           break;
                                       }
                                   }
-                                  break;
-                          }
+                              break;
+                           }
 
                   }
                   
             }
             SumUp();
+            double Av1 = rejected[NumberOfStreams] / NumberOfReceivedPackages[NumberOfStreams];
+            Console.WriteLine("{0} oraz {1}", Av1, ProbabilityOfFailure[NumberOfStreams]);
             WriteResults();
             Console.WriteLine("Zakonczono symulacje");
 
@@ -218,7 +213,11 @@ namespace Router
                         line = sr.ReadLine();
                     }
                     strings = line.Split(' ');
-                    if (strings[0] == "PRZEPLYWNOSC" && strings[2] != "") flowability = int.Parse(strings[2]);
+                    if (strings[0] == "PRZEPLYWNOSC" && strings[2] != "")
+                    {
+                        flowability = int.Parse(strings[2]);
+                        flowability = flowability / 1000;
+                    }
                     else throw (new Exception("Zla przeplywnosc"));
                     #endregion
                     #region kolejka
@@ -228,7 +227,10 @@ namespace Router
                         line = sr.ReadLine();
                     }
                     strings = line.Split(' ');
-                    if (strings[0] == "KOLEJKI" && strings[2] != "") NumberOfQueues = int.Parse(strings[2]);
+                    if (strings[0] == "KOLEJKI" && strings[2] != "")
+                    {
+                        NumberOfQueues = int.Parse(strings[2]);
+                    }
                     else throw (new Exception("Zla liczba pojemności kolejki"));
                     #endregion
                     #region readBufors
@@ -248,20 +250,10 @@ namespace Router
                         {
                             name = strings[2];
                             size = int.Parse(strings[5]);
+                            size *= 8;
                         }
                         else throw (new Exception("Zla nazwa rozkladu i bufora"));
                         line = "";
-                        /*while (line.Length < 2 || line[0] == '#')
-                        {
-                            line = sr.ReadLine();
-                        }
-                        strings = line.Split(' ');
-                        if (strings[0] == "BUFOR" && strings[2] != "")
-                        {
-                            size = int.Parse(strings[2]);
-
-                        }
-                        else throw (new Exception("Zly bufor"));*/
 
                         TableOfPriorities[i] = name;
                         queue[i] = new FIFOQueue(name, size);
@@ -380,14 +372,13 @@ namespace Router
         {
             for (int i = 0; i < NumberOfStreams; i++)
             {
-                AverageOccupancyOfqueue[i] = TotalOccupancyOfQueue[i] / (TimeOfSimulation * queue[i].GetSize());
+                AverageOccupancyOfqueue[i] = TotalOccupancyOfQueue[i] / (TimeOfSimulation);
                 AverageServingTime[i] = TotalServingTime[i] / NumberOfServedPackages[i];
                 ProbabilityOfFailure[i] = (NumberOfReceivedPackages[i] - NumberOfServedPackages[i]) / NumberOfReceivedPackages[i];
             }
-            AverageServingTime[NumberOfStreams ] = TotalServingTime[NumberOfStreams ] / NumberOfServedPackages[NumberOfStreams ];
+            AverageServingTime[NumberOfStreams ] = TotalServingTime[NumberOfStreams ] / NumberOfServedPackages[NumberOfStreams ]*NumberOfStreams;
             ProbabilityOfFailure[NumberOfStreams] = (NumberOfReceivedPackages[NumberOfStreams ] - NumberOfServedPackages[NumberOfStreams ]) / NumberOfReceivedPackages[NumberOfStreams ];
             AverageOccupancyOfRouter = TotalOccupancyOfRouter / TimeOfSimulation;
-            //zbieramy zajętość, czas obsługi, pstwo odrzucenia
 
         }
         public void WriteResults()
@@ -408,6 +399,20 @@ namespace Router
             routerSimulationResults.WriteLine("Srednia zajetosc Routera : " + AverageOccupancyOfRouter);
 
             routerSimulationResults.Close();
+        }
+        public double Extractvalue (string name, int number)
+        {
+            Random rnd = new Random();
+            double value;
+            int j=0;
+            for (int i=0;i<number;i++)
+            {
+                j=i;
+                if (distribution[i].GetName() == name)
+                    break;
+
+            }
+            return value = distribution[j].SetTime(rnd.NextDouble());
         }
     }
 }
