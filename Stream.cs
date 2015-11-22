@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 namespace Router
 {
 
-    class Stream     //////////// public ustawiłem tymczasowo do testów wczytywania
+    class Stream                // klasa strumienia wejsciowego / charakteryzuje sie ona priorytetem oraz przypisanym do niego buforem w routerze/
     {
         private string name;
         private int priority;
         public int bufor;
-        private string lengthDistribution; // nazwa rozkładu z którego losowana jest wartość trwania połączenia
-        private string waitingDistribution; //nazwa rozkładu z którego losowana jest wartość odstepu miedzy polaczeniami
-        private int numberOflengthDistribution;
+        private string lengthDistribution; // nazwa rozkładu z którego losowana jest dlugosc paczki
+        private string waitingDistribution; //nazwa rozkładu z którego losowana jest wartość odstepu miedzy przychodzacymi paczkami
+        private int numberOflengthDistribution;//ilosc rozkladow
         private int numberOfWaitingDistribution;
 
         public Stream(string m_name, string m_lengthDistribution, string m_waitingDistribution, int m_priority, int m_bufor)
