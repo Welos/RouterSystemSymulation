@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 namespace Router
 {
     public enum KindOfEvent { Coming, GoingOutOfRouter }; // pojawienie się w strumieniu i wyjście z wiązki
-    public class Event
-    {
-        public double key;
+    public class Event                                    // klasa opisujaca pojawiajace sie wydarzenie / 
+    {                                                     // mamy 2 typy wydarzen przyjscie i wyjscie paczki z routera
+        public double key;          // czas pojawienia sie wydarzenia
         private KindOfEvent kind;
-        private int StreamNumber; // numer strumienia z którego pochodzi to Event
+        private int StreamNumber;   // numer strumienia z którego pochodzi wydarzenie
 
         public Event(KindOfEvent kind, int m_StreamNumber, double time)
         {
