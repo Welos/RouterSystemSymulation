@@ -6,20 +6,19 @@ using System.Threading.Tasks;
 
 namespace Router
 {
-    class FIFOQueue // queue FIFO. W tablicy przechowyjemy zgłoszenia, czyli próby połączenia oczekujące na zwolnienie się wiązki
+    class FIFOQueue                                         //klasa ta symuluje działanie kolejki fifo
     {
 
-        private Package[] queue;
-        public double occupancy;
-        public int size;
-        private int numberOfPackages;
-        private string name;
+        private Package[] queue;                            //tablica pakietów czekających na przetworzenie
+        public double occupancy;                            //zajętość kolejki
+        public int size;                                    //pojemność kolejki
+        public int numberOfPackages;                        //ilość pakietów obecnych w kolejce
+        private string name;                                //nazwa kolejki
 
-        public int GetSize() { return size; }
-        public double GetOccupancy() { return occupancy; }
-        public Package[] GetQueue() { return queue; }
+        public int GetSize() { return size; }               //gettter wielkości kolejki (właściwie zbędny biorąc pod uwagę, że size jest publiczny)
+        public double GetOccupancy() { return occupancy; }  //jw
 
-        public FIFOQueue(string m_name, int m_size)
+        public FIFOQueue(string m_name, int m_size)         //konstruktor pustej kolejki o zadanej wielkości i nazwie
         {
             numberOfPackages = 0;
             name = m_name;
@@ -29,35 +28,27 @@ namespace Router
 
         }
 
-        public void SetPackage(Package pack)
+        public void SetPackage(Package pack)                //metoda umieszczaająca na końcu kolejki nową paczkę 'pack'
         {
-            numberOfPackages++;
-            queue[numberOfPackages - 1] = pack;
-            occupancy += pack.GetSize();
+            if (this.occupancy+pack.GetSize()<this.size)
+            {
+                queue[numberOfPackages] = pack;
+                numberOfPackages++;
+                occupancy += pack.GetSize();
+            }
+
         }
 
-        /*     public Package DeletePackage(int i)
-             {
-                 Package tmp = queue[i];
-                 ChangeIndex(i);
-                 numberOfPackages--;
-                 occupancy -= tmp.GetSize();
-                 return tmp;
-             }*/
-
-        public Package MoveToStream()
+        public Package MoveToStream()                         //metoda zwracająca pierwszą paczkę i przesuwająca pozostałe paczki o 1 do przodu
         {
             Package tmp = queue[0];
-            ChangeIndex(0);
+            for (int j = 0; j < numberOfPackages - 1; j++)
+                queue[j] = queue[j + 1];
             numberOfPackages--;
             occupancy -= tmp.GetSize();
             return tmp;
         }
 
-        public void ChangeIndex(int i)
-        {
-            for (int j = i; j < numberOfPackages - 1; j++)
-                queue[j] = queue[j + 1];
-        }
+
     }
 }
