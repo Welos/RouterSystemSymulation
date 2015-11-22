@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Router
+namespace Router      
 {
-    class ProbabilityDistributions
+    class ProbabilityDistributions //  klasa obslugujaca rozklady dystrybuanty czasow oraz rozmiarow
     {
-        private double lambda;
-        private string name;
+        private double lambda;     // wartosc lambdy danego rozkladu Poissona
+        private string name;       // nazwa sluzaca rozroznieniu rozkladow
 
         public ProbabilityDistributions(string name, double lambda)
         {
@@ -19,7 +19,7 @@ namespace Router
 
         public double SetTime(double x)
         {
-            return ((-1) * Math.Log(1 - x) / lambda); //przeksztalcony wzor na Rozklad wykladniczy
+            return ((-1) * Math.Log(1 - x) / lambda); //przeksztalcony wzor na rozklad wykladniczy
         }
 
         public string GetName() { return name; }
